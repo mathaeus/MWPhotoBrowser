@@ -1479,42 +1479,29 @@
 
 #pragma mark - Action Progress
 
-- (MBProgressHUD *)progressHUD {
-    if (!_progressHUD) {
-        _progressHUD = [[MBProgressHUD alloc] initWithView:self.view];
-        _progressHUD.minSize = CGSizeMake(120, 120);
-        _progressHUD.minShowTime = 1;
-        // The sample image is based on the
-        // work by: http://www.pixelpressicons.com
-        // licence: http://creativecommons.org/licenses/by/2.5/ca/
-        self.progressHUD.customView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"MWPhotoBrowser.bundle/images/Checkmark.png"]];
-        [self.view addSubview:_progressHUD];
-    }
-    return _progressHUD;
-}
 
 - (void)showProgressHUDWithMessage:(NSString *)message {
-    self.progressHUD.labelText = message;
-    self.progressHUD.mode = MBProgressHUDModeIndeterminate;
-    [self.progressHUD show:YES];
-    self.navigationController.navigationBar.userInteractionEnabled = NO;
+
+    [SVProgressHUD showWithStatus:message maskType:SVProgressHUDMaskTypeBlack];
 }
 
 - (void)hideProgressHUD:(BOOL)animated {
-    [self.progressHUD hide:animated];
+    
+    [SVProgressHUD dismiss];
     self.navigationController.navigationBar.userInteractionEnabled = YES;
 }
 
 - (void)showProgressHUDCompleteMessage:(NSString *)message {
     if (message) {
-        if (self.progressHUD.isHidden) [self.progressHUD show:YES];
-        self.progressHUD.labelText = message;
-        self.progressHUD.mode = MBProgressHUDModeCustomView;
-        [self.progressHUD hide:YES afterDelay:1.5];
+        
+        __weak __typeof(&*self)weakSelf = self;
+
+     	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.5*NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [weakSelf hideProgressHUD:YES];
+        });
     } else {
-        [self.progressHUD hide:YES];
+        [self hideProgressHUD:YES];
     }
-    self.navigationController.navigationBar.userInteractionEnabled = YES;
 }
 
 #pragma mark - Actions
