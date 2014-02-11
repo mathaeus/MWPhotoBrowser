@@ -336,20 +336,21 @@
 	// Super
 	[super viewWillAppear:animated];
     
-    // Status bar
-    if ([UIViewController instancesRespondToSelector:@selector(prefersStatusBarHidden)]) {
-        _leaveStatusBarAlone = [self presentingViewControllerPrefersStatusBarHidden];
-    } else {
-        _leaveStatusBarAlone = [UIApplication sharedApplication].statusBarHidden;
-    }
-    if (CGRectEqualToRect([[UIApplication sharedApplication] statusBarFrame], CGRectZero)) {
-        // If the frame is zero then definitely leave it alone
-        _leaveStatusBarAlone = YES;
-    }
-    if (!_leaveStatusBarAlone && self.wantsFullScreenLayout && UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
-        _previousStatusBarStyle = [[UIApplication sharedApplication] statusBarStyle];
-        [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleBlackTranslucent animated:animated];
-    }
+//    // Status bar
+//    if ([UIViewController instancesRespondToSelector:@selector(prefersStatusBarHidden)]) {
+//        _leaveStatusBarAlone = [self presentingViewControllerPrefersStatusBarHidden];
+//    } else {
+//        _leaveStatusBarAlone = [UIApplication sharedApplication].statusBarHidden;
+//    }
+//    if (CGRectEqualToRect([[UIApplication sharedApplication] statusBarFrame], CGRectZero)) {
+//        // If the frame is zero then definitely leave it alone
+//        _leaveStatusBarAlone = YES;
+//    }
+//    if (!_leaveStatusBarAlone && self.wantsFullScreenLayout && UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+//        _previousStatusBarStyle = [[UIApplication sharedApplication] statusBarStyle];
+//        [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleBlackTranslucent animated:animated];
+//    }
+    _leaveStatusBarAlone = YES;
     
     // Navigation bar appearance
     if (!_viewIsActive && [self.navigationController.viewControllers objectAtIndex:0] != self) {
