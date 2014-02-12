@@ -341,20 +341,6 @@
 	// Super
 	[super viewWillAppear:animated];
     
-//    // Status bar
-//    if ([UIViewController instancesRespondToSelector:@selector(prefersStatusBarHidden)]) {
-//        _leaveStatusBarAlone = [self presentingViewControllerPrefersStatusBarHidden];
-//    } else {
-//        _leaveStatusBarAlone = [UIApplication sharedApplication].statusBarHidden;
-//    }
-//    if (CGRectEqualToRect([[UIApplication sharedApplication] statusBarFrame], CGRectZero)) {
-//        // If the frame is zero then definitely leave it alone
-//        _leaveStatusBarAlone = YES;
-//    }
-//    if (!_leaveStatusBarAlone && self.wantsFullScreenLayout && UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
-//        _previousStatusBarStyle = [[UIApplication sharedApplication] statusBarStyle];
-//        [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleBlackTranslucent animated:animated];
-//    }
     _leaveStatusBarAlone = YES;
     
     // Navigation bar appearance
@@ -1126,9 +1112,9 @@
     [self addChildViewController:_gridController];
     [self.view addSubview:_gridController.view];
     
-    // Hide action button on nav bar if it exists
-    if (self.navigationItem.rightBarButtonItem == _actionButton) {
-        _gridPreviousRightNavItem = _actionButton;
+    // Hide current right button on nav bar if it exists
+    if (self.navigationItem.rightBarButtonItem) {
+        _gridPreviousRightNavItem = self.navigationItem.rightBarButtonItem;
         [self.navigationItem setRightBarButtonItem:nil animated:YES];
     } else {
         _gridPreviousRightNavItem = nil;
@@ -1157,8 +1143,8 @@
     // Remember previous content offset
     _currentGridContentOffset = _gridController.collectionView.contentOffset;
     
-    // Restore action button if it was removed
-    if (_gridPreviousRightNavItem == _actionButton && _actionButton) {
+    // Restore previous button if it was removed
+    if (_gridPreviousRightNavItem) {
         [self.navigationItem setRightBarButtonItem:_gridPreviousRightNavItem animated:YES];
     }
     
