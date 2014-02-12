@@ -77,7 +77,7 @@
     _currentGridContentOffset = CGPointMake(0, CGFLOAT_MAX);
     _didSavePreviousStateOfNavBar = NO;
     _useDefaultBarButtons = YES;
-    _hideRightBarButtonItemForLocalPhotos = NO;
+    _showRightBarButtonItemForLocalPhotosOnly = NO;
     if ([self respondsToSelector:@selector(automaticallyAdjustsScrollViewInsets)]){
         self.automaticallyAdjustsScrollViewInsets = NO;
     }
