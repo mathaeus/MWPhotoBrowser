@@ -34,6 +34,7 @@
 - (void)photoBrowser:(MWPhotoBrowser *)photoBrowser actionButtonPressedForPhotoAtIndex:(NSUInteger)index;
 - (BOOL)photoBrowser:(MWPhotoBrowser *)photoBrowser isPhotoSelectedAtIndex:(NSUInteger)index;
 - (void)photoBrowser:(MWPhotoBrowser *)photoBrowser photoAtIndex:(NSUInteger)index selectedChanged:(BOOL)selected;
+- (BOOL)photoBrowser:(MWPhotoBrowser *)photoBrowser isLocalPhotoAtIndex:(NSUInteger)index;
 
 @end
 
@@ -48,6 +49,7 @@
 @property (nonatomic) BOOL enableGrid;
 @property (nonatomic) BOOL startOnGrid;
 @property (nonatomic) BOOL useDefaultBarButtons;
+@property (nonatomic) BOOL showRightBarButtonItemForLocalPhotosOnly;
 @property (nonatomic, readonly) NSUInteger currentIndex;
 
 // Init

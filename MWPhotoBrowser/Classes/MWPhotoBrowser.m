@@ -77,6 +77,7 @@
     _currentGridContentOffset = CGPointMake(0, CGFLOAT_MAX);
     _didSavePreviousStateOfNavBar = NO;
     _useDefaultBarButtons = YES;
+    _hideRightBarButtonItemForLocalPhotos = NO;
     if ([self respondsToSelector:@selector(automaticallyAdjustsScrollViewInsets)]){
         self.automaticallyAdjustsScrollViewInsets = NO;
     }
@@ -1141,9 +1142,15 @@
     
     // Remember previous content offset
     _currentGridContentOffset = _gridController.collectionView.contentOffset;
-    
-    // Restore previous button if it was removed
-    if (_gridPreviousRightNavItem) {
+
+	BOOL showRightBarButtonItem = NO;
+
+	if (_showRightBarButtonItemForLocalPhotosOnly && [_delegate respondsToSelector:@selector(photoBrowser:isLocalPhotoAtIndex:)]) {
+		showRightBarButtonItem = [_delegate photoBrowser:self isLocalPhotoAtIndex:self.currentIndex];
+	}
+
+	// Restore previous button if it was removed
+    if (_gridPreviousRightNavItem && showRightBarButtonItem) {
         [self.navigationItem setRightBarButtonItem:_gridPreviousRightNavItem animated:YES];
     }
     
