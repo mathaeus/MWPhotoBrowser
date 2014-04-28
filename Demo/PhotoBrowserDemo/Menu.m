@@ -8,6 +8,7 @@
 
 #import "Menu.h"
 #import "SDImageCache.h"
+#import "MWCommon.h"
 
 @implementation Menu
 
@@ -23,7 +24,11 @@
         [[SDImageCache sharedImageCache] clearMemory];
         
         _segmentedControl = [[UISegmentedControl alloc] initWithItems:[NSArray arrayWithObjects:@"Push", @"Modal", nil]];
-        _segmentedControl.segmentedControlStyle = UISegmentedControlStyleBar;
+#if __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_7_0
+        if (SYSTEM_VERSION_LESS_THAN(@"7")) {
+            _segmentedControl.segmentedControlStyle = UISegmentedControlStyleBar;
+        }
+#endif
         _segmentedControl.selectedSegmentIndex = 0;
         [_segmentedControl addTarget:self action:@selector(segmentChange) forControlEvents:UIControlEventValueChanged];
         
@@ -44,6 +49,13 @@
 
 #pragma mark -
 #pragma mark View
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Test toolbar hiding
+//    [self setToolbarItems: @[[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:nil action:nil]]];
+//    [[self navigationController] setToolbarHidden:NO animated:NO];
+}
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
@@ -1027,10 +1039,13 @@
     browser.displayNavArrows = displayNavArrows;
     browser.displaySelectionButtons = displaySelectionButtons;
     browser.alwaysShowControls = displaySelectionButtons;
-    browser.wantsFullScreenLayout = YES;
     browser.zoomPhotosToFill = YES;
+#if __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_7_0
+    browser.wantsFullScreenLayout = YES;
+#endif
     browser.enableGrid = enableGrid;
     browser.startOnGrid = startOnGrid;
+    browser.enableSwipeToDismiss = YES;
     [browser setCurrentPhotoIndex:0];
     
     // Reset selections
@@ -1121,9 +1136,19 @@
     return [[_selections objectAtIndex:index] boolValue];
 }
 
+//- (NSString *)photoBrowser:(MWPhotoBrowser *)photoBrowser titleForPhotoAtIndex:(NSUInteger)index {
+//    return [NSString stringWithFormat:@"Photo %lu", (unsigned long)index+1];
+//}
+
 - (void)photoBrowser:(MWPhotoBrowser *)photoBrowser photoAtIndex:(NSUInteger)index selectedChanged:(BOOL)selected {
     [_selections replaceObjectAtIndex:index withObject:[NSNumber numberWithBool:selected]];
     NSLog(@"Photo at index %lu selected %@", (unsigned long)index, selected ? @"YES" : @"NO");
+}
+
+- (void)photoBrowserDidFinishModalPresentation:(MWPhotoBrowser *)photoBrowser {
+    // If we subscribe to this method we must dismiss the view controller ourselves
+    NSLog(@"Did finish modal presentation");
+    [self dismissViewControllerAnimated:YES completion:nil];
 }
 
 #pragma mark - Load Assets
@@ -1169,7 +1194,7 @@
         // Process groups
         void (^ assetGroupEnumerator) (ALAssetsGroup *, BOOL *) = ^(ALAssetsGroup *group, BOOL *stop) {
             if (group != nil) {
-                [group enumerateAssetsUsingBlock:assetEnumerator];
+                [group enumerateAssetsWithOptions:NSEnumerationReverse usingBlock:assetEnumerator];
                 [assetGroups addObject:group];
             }
         };
