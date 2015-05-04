@@ -202,7 +202,9 @@
     
 	// Super
     [super viewDidLoad];
-	
+
+	// avoid problems with showing/hiding statusbar when showing MWPhotoBrowser
+	_leaveStatusBarAlone = YES;
 }
 
 - (void)performLayout {
@@ -353,8 +355,8 @@
     
 	// Super
 	[super viewWillAppear:animated];
-    
-    _leaveStatusBarAlone = YES;
+
+	// 	statusbar should be left alone
 //    // Status bar
 //    if ([UIViewController instancesRespondToSelector:@selector(prefersStatusBarHidden)]) {
 //        _leaveStatusBarAlone = [self presentingViewControllerPrefersStatusBarHidden];
