@@ -1335,9 +1335,9 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     [_gridController.view layoutIfNeeded];
     [_gridController adjustOffsetsAsRequired];
     
-    // Hide action button on nav bar if it exists
-    if (self.navigationItem.rightBarButtonItem == _actionButton) {
-        _gridPreviousRightNavItem = _actionButton;
+    // Hide current right button on nav bar if it exists
+    if (self.navigationItem.rightBarButtonItem) {
+        _gridPreviousRightNavItem = self.navigationItem.rightBarButtonItem;
         [self.navigationItem setRightBarButtonItem:nil animated:YES];
     } else {
         _gridPreviousRightNavItem = nil;
