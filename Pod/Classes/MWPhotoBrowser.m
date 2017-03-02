@@ -91,6 +91,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     
     // Custom
     _useDefaultBarButtons = YES;
+    _showRightBarButtonItemForLocalPhotosOnly = NO;
 }
 
 - (void)dealloc {
@@ -1366,8 +1367,14 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     // Remember previous content offset
     _currentGridContentOffset = _gridController.collectionView.contentOffset;
     
-    // Restore action button if it was removed
-    if (_gridPreviousRightNavItem == _actionButton && _actionButton) {
+    BOOL showRightBarButtonItem = NO;
+    
+    if (_showRightBarButtonItemForLocalPhotosOnly && [_delegate respondsToSelector:@selector(photoBrowser:isLocalPhotoAtIndex:)]) {
+        showRightBarButtonItem = [_delegate photoBrowser:self isLocalPhotoAtIndex:self.currentIndex];
+    }
+    
+    // Restore previous button if it was removed
+    if (_gridPreviousRightNavItem && showRightBarButtonItem) {
         [self.navigationItem setRightBarButtonItem:_gridPreviousRightNavItem animated:YES];
     }
     

@@ -36,6 +36,9 @@
 - (void)photoBrowser:(MWPhotoBrowser *)photoBrowser photoAtIndex:(NSUInteger)index selectedChanged:(BOOL)selected;
 - (void)photoBrowserDidFinishModalPresentation:(MWPhotoBrowser *)photoBrowser;
 
+// Custom
+- (BOOL)photoBrowser:(MWPhotoBrowser *)photoBrowser isLocalPhotoAtIndex:(NSUInteger)index;
+
 @end
 
 @interface MWPhotoBrowser : UIViewController <UIScrollViewDelegate, UIActionSheetDelegate>
@@ -74,5 +77,6 @@
 
 // Custom
 @property (nonatomic) BOOL useDefaultBarButtons;
+@property (nonatomic) BOOL showRightBarButtonItemForLocalPhotosOnly;
 
 @end
