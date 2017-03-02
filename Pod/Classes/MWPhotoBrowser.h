@@ -72,4 +72,7 @@
 - (void)showNextPhotoAnimated:(BOOL)animated;
 - (void)showPreviousPhotoAnimated:(BOOL)animated;
 
+// Custom
+@property (nonatomic) BOOL useDefaultBarButtons;
+
 @end
