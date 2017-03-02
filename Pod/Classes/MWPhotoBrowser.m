@@ -1070,8 +1070,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 }
 
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
-	// Hide controls when dragging begins
-	[self setControlsHidden:YES animated:YES permanent:NO];
+    [self hideControlsAfterDelay];
 }
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
