@@ -8,7 +8,6 @@
 
 #import <UIKit/UIKit.h>
 #import <MBProgressHUD/MBProgressHUD.h>
-#import <MediaPlayer/MediaPlayer.h>
 #import "MWGridViewController.h"
 #import "MWZoomingScrollView.h"
 
@@ -52,12 +51,7 @@
     UIBarButtonItem *_previousViewControllerBackButton;
     UIImage *_previousNavigationBarBackgroundImageDefault;
     UIImage *_previousNavigationBarBackgroundImageLandscapePhone;
-    
-    // Video
-    MPMoviePlayerViewController *_currentVideoPlayerViewController;
-    NSUInteger _currentVideoIndex;
-    UIActivityIndicatorView *_currentVideoLoadingIndicator;
-    
+        
     // Misc
     BOOL _hasBelongedToViewController;
     BOOL _isVCBasedStatusBarAppearance;

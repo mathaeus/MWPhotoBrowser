@@ -15,8 +15,6 @@
 
 #define PADDING                  10
 
-static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
-
 @implementation MWPhotoBrowser
 
 #pragma mark - Init
@@ -64,7 +62,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     _previousLayoutBounds = CGRectZero;
     _currentPageIndex = 0;
     _previousPageIndex = NSUIntegerMax;
-    _currentVideoIndex = NSUIntegerMax;
     _displayActionButton = YES;
     _displayNavArrows = NO;
     _zoomPhotosToFill = YES;
@@ -95,7 +92,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 }
 
 - (void)dealloc {
-    [self clearCurrentVideo];
     _pagingScrollView.delegate = nil;
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [self releaseAllUnderlyingPhotos:NO];
@@ -383,17 +379,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
     _viewIsActive = YES;
-    
-    // Autoplay if first is video
-    if (!_viewHasAppearedInitially) {
-        if (_autoPlayOnAppear) {
-            MWPhoto *photo = [self photoAtIndex:_currentPageIndex];
-            if ([photo respondsToSelector:@selector(isVideo)] && photo.isVideo) {
-                [self playVideoAtIndex:_currentPageIndex];
-            }
-        }
-    }
-    
     _viewHasAppearedInitially = YES;
         
 }
@@ -410,7 +395,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 
         // State
         _viewIsActive = NO;
-        [self clearCurrentVideo]; // Clear current playing video
         
         // Bar state / appearance
         [self restorePreviousNavBarAppearance:animated];
@@ -526,9 +510,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         if (page.selectedButton) {
             page.selectedButton.frame = [self frameForSelectedButton:page.selectedButton atIndex:index];
         }
-        if (page.playButton) {
-            page.playButton.frame = [self frameForPlayButton:page.playButton atIndex:index];
-        }
         
         // Adjust scales if bounds has changed since last time
         if (!CGRectEqualToRect(_previousLayoutBounds, self.view.bounds)) {
@@ -539,9 +520,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 
 	}
     
-    // Adjust video loading indicator if it's visible
-    [self positionVideoLoadingIndicator];
-	
 	// Adjust contentOffset to preserve page location based on values collected prior to location
 	_pagingScrollView.contentOffset = [self contentOffsetForPageAtIndex:indexPriorToLayout];
 	[self didStartViewingPageAtIndex:_currentPageIndex]; // initial
@@ -794,7 +772,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 			[_recycledPages addObject:page];
             [page.captionView removeFromSuperview];
             [page.selectedButton removeFromSuperview];
-            [page.playButton removeFromSuperview];
             [page prepareForReuse];
 			[page removeFromSuperview];
 			MWLog(@"Removed page at index %lu", (unsigned long)pageIndex);
@@ -825,18 +802,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
                 captionView.frame = [self frameForCaptionView:captionView atIndex:index];
                 [_pagingScrollView addSubview:captionView];
                 page.captionView = captionView;
-            }
-            
-            // Add play button if needed
-            if (page.displayingVideo) {
-                UIButton *playButton = [UIButton buttonWithType:UIButtonTypeCustom];
-                [playButton setImage:[UIImage imageForResourcePath:@"MWPhotoBrowser.bundle/PlayButtonOverlayLarge" ofType:@"png" inBundle:[NSBundle bundleForClass:[self class]]] forState:UIControlStateNormal];
-                [playButton setImage:[UIImage imageForResourcePath:@"MWPhotoBrowser.bundle/PlayButtonOverlayLargeTap" ofType:@"png" inBundle:[NSBundle bundleForClass:[self class]]] forState:UIControlStateHighlighted];
-                [playButton addTarget:self action:@selector(playButtonTapped:) forControlEvents:UIControlEventTouchUpInside];
-                [playButton sizeToFit];
-                playButton.frame = [self frameForPlayButton:playButton atIndex:index];
-                [_pagingScrollView addSubview:playButton];
-                page.playButton = playButton;
             }
             
             // Add selected button
@@ -922,11 +887,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         // Show controls
         [self setControlsHidden:NO animated:YES permanent:YES];
         return;
-    }
-    
-    // Handle video on page change
-    if (!_rotating && index != _currentVideoIndex) {
-        [self clearCurrentVideo];
     }
     
     // Release images further away than +/-1
@@ -1039,14 +999,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     return CGRectIntegral(selectedButtonFrame);
 }
 
-- (CGRect)frameForPlayButton:(UIButton *)playButton atIndex:(NSUInteger)index {
-    CGRect pageFrame = [self frameForPageAtIndex:index];
-    return CGRectMake(floorf(CGRectGetMidX(pageFrame) - playButton.frame.size.width / 2),
-                      floorf(CGRectGetMidY(pageFrame) - playButton.frame.size.height / 2),
-                      playButton.frame.size.width,
-                      playButton.frame.size.height);
-}
-
 #pragma mark - UIScrollView Delegate
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
@@ -1111,9 +1063,9 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 	_previousButton.enabled = (_currentPageIndex > 0);
 	_nextButton.enabled = (_currentPageIndex < numberOfPhotos - 1);
     
-    // Disable action button if there is no image or it's a video
+    // Disable action button if there is no image
     MWPhoto *photo = [self photoAtIndex:_currentPageIndex];
-    if ([photo underlyingImage] == nil || ([photo respondsToSelector:@selector(isVideo)] && photo.isVideo)) {
+    if ([photo underlyingImage] == nil) {
         _actionButton.enabled = NO;
         _actionButton.tintColor = [UIColor clearColor]; // Tint to hide button
     } else {
@@ -1169,140 +1121,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     }
 }
 
-- (void)playButtonTapped:(id)sender {
-    // Ignore if we're already playing a video
-    if (_currentVideoIndex != NSUIntegerMax) {
-        return;
-    }
-    NSUInteger index = [self indexForPlayButton:sender];
-    if (index != NSUIntegerMax) {
-        if (!_currentVideoPlayerViewController) {
-            [self playVideoAtIndex:index];
-        }
-    }
-}
-
-- (NSUInteger)indexForPlayButton:(UIView *)playButton {
-    NSUInteger index = NSUIntegerMax;
-    for (MWZoomingScrollView *page in _visiblePages) {
-        if (page.playButton == playButton) {
-            index = page.index;
-            break;
-        }
-    }
-    return index;
-}
-
-#pragma mark - Video
-
-- (void)playVideoAtIndex:(NSUInteger)index {
-    id photo = [self photoAtIndex:index];
-    if ([photo respondsToSelector:@selector(getVideoURL:)]) {
-        
-        // Valid for playing
-        [self clearCurrentVideo];
-        _currentVideoIndex = index;
-        [self setVideoLoadingIndicatorVisible:YES atPageIndex:index];
-
-        // Get video and play
-        typeof(self) __weak weakSelf = self;
-        [photo getVideoURL:^(NSURL *url) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                // If the video is not playing anymore then bail
-                typeof(self) strongSelf = weakSelf;
-                if (!strongSelf) return;
-                if (strongSelf->_currentVideoIndex != index || !strongSelf->_viewIsActive) {
-                    return;
-                }
-                if (url) {
-                    [weakSelf _playVideo:url atPhotoIndex:index];
-                } else {
-                    [weakSelf setVideoLoadingIndicatorVisible:NO atPageIndex:index];
-                }
-            });
-        }];
-        
-    }
-}
-
-- (void)_playVideo:(NSURL *)videoURL atPhotoIndex:(NSUInteger)index {
-
-    // Setup player
-    _currentVideoPlayerViewController = [[MPMoviePlayerViewController alloc] initWithContentURL:videoURL];
-    [_currentVideoPlayerViewController.moviePlayer prepareToPlay];
-    _currentVideoPlayerViewController.moviePlayer.shouldAutoplay = YES;
-    _currentVideoPlayerViewController.moviePlayer.scalingMode = MPMovieScalingModeAspectFit;
-    _currentVideoPlayerViewController.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
-    
-    // Remove the movie player view controller from the "playback did finish" notification observers
-    // Observe ourselves so we can get it to use the crossfade transition
-    [[NSNotificationCenter defaultCenter] removeObserver:_currentVideoPlayerViewController
-                                                    name:MPMoviePlayerPlaybackDidFinishNotification
-                                                  object:_currentVideoPlayerViewController.moviePlayer];
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(videoFinishedCallback:)
-                                                 name:MPMoviePlayerPlaybackDidFinishNotification
-                                               object:_currentVideoPlayerViewController.moviePlayer];
-
-    // Show
-    [self presentViewController:_currentVideoPlayerViewController animated:YES completion:nil];
-
-}
-
-- (void)videoFinishedCallback:(NSNotification*)notification {
-    
-    // Remove observer
-    [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                    name:MPMoviePlayerPlaybackDidFinishNotification
-                                                  object:_currentVideoPlayerViewController.moviePlayer];
-    
-    // Clear up
-    [self clearCurrentVideo];
-    
-    // Dismiss
-    BOOL error = [[[notification userInfo] objectForKey:MPMoviePlayerPlaybackDidFinishReasonUserInfoKey] intValue] == MPMovieFinishReasonPlaybackError;
-    if (error) {
-        // Error occured so dismiss with a delay incase error was immediate and we need to wait to dismiss the VC
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            [self dismissViewControllerAnimated:YES completion:nil];
-        });
-    } else {
-        [self dismissViewControllerAnimated:YES completion:nil];
-    }
-    
-}
-
-- (void)clearCurrentVideo {
-    [_currentVideoPlayerViewController.moviePlayer stop];
-    [_currentVideoLoadingIndicator removeFromSuperview];
-    _currentVideoPlayerViewController = nil;
-    _currentVideoLoadingIndicator = nil;
-    [[self pageDisplayedAtIndex:_currentVideoIndex] playButton].hidden = NO;
-    _currentVideoIndex = NSUIntegerMax;
-}
-
-- (void)setVideoLoadingIndicatorVisible:(BOOL)visible atPageIndex:(NSUInteger)pageIndex {
-    if (_currentVideoLoadingIndicator && !visible) {
-        [_currentVideoLoadingIndicator removeFromSuperview];
-        _currentVideoLoadingIndicator = nil;
-        [[self pageDisplayedAtIndex:pageIndex] playButton].hidden = NO;
-    } else if (!_currentVideoLoadingIndicator && visible) {
-        _currentVideoLoadingIndicator = [[UIActivityIndicatorView alloc] initWithFrame:CGRectZero];
-        [_currentVideoLoadingIndicator sizeToFit];
-        [_currentVideoLoadingIndicator startAnimating];
-        [_pagingScrollView addSubview:_currentVideoLoadingIndicator];
-        [self positionVideoLoadingIndicator];
-        [[self pageDisplayedAtIndex:pageIndex] playButton].hidden = YES;
-    }
-}
-
-- (void)positionVideoLoadingIndicator {
-    if (_currentVideoLoadingIndicator && _currentVideoIndex != NSUIntegerMax) {
-        CGRect frame = [self frameForPageAtIndex:_currentVideoIndex];
-        _currentVideoLoadingIndicator.center = CGPointMake(CGRectGetMidX(frame), CGRectGetMidY(frame));
-    }
-}
-
 #pragma mark - Grid
 
 - (void)showGridAnimated {
@@ -1312,9 +1130,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 - (void)showGrid:(BOOL)animated {
 
     if (_gridController) return;
-    
-    // Clear video
-    [self clearCurrentVideo];
     
     // Init grid controller
     _gridController = [[MWGridViewController alloc] init];

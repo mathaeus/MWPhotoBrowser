@@ -12,12 +12,9 @@
 #import "MWPhotoBrowserPrivate.h"
 #import "UIImage+MWPhotoBrowser.h"
 
-#define VIDEO_INDICATOR_PADDING 10
-
 @interface MWGridCell () {
     
     UIImageView *_imageView;
-    UIImageView *_videoIndicator;
     UIImageView *_loadingError;
 	DACircularProgressView *_loadingIndicator;
     UIButton *_selectedButton;
@@ -41,15 +38,6 @@
         _imageView.clipsToBounds = YES;
         _imageView.autoresizesSubviews = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
         [self addSubview:_imageView];
-        
-        // Video Image
-        _videoIndicator = [UIImageView new];
-        _videoIndicator.hidden = NO;
-        UIImage *videoIndicatorImage = [UIImage imageForResourcePath:@"MWPhotoBrowser.bundle/VideoOverlay" ofType:@"png" inBundle:[NSBundle bundleForClass:[self class]]];
-        _videoIndicator.frame = CGRectMake(self.bounds.size.width - videoIndicatorImage.size.width - VIDEO_INDICATOR_PADDING, self.bounds.size.height - videoIndicatorImage.size.height - VIDEO_INDICATOR_PADDING, videoIndicatorImage.size.width, videoIndicatorImage.size.height);
-        _videoIndicator.image = videoIndicatorImage;
-        _videoIndicator.autoresizesSubviews = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleTopMargin;
-        [self addSubview:_videoIndicator];
         
         // Selection button
         _selectedButton = [UIButton buttonWithType:UIButtonTypeCustom];
@@ -124,11 +112,6 @@
 
 - (void)setPhoto:(id <MWPhoto>)photo {
     _photo = photo;
-    if ([photo respondsToSelector:@selector(isVideo)]) {
-        _videoIndicator.hidden = !photo.isVideo;
-    } else {
-        _videoIndicator.hidden = YES;
-    }
     if (_photo) {
         if (![_photo underlyingImage]) {
             [self showLoadingIndicator];

@@ -57,10 +57,6 @@
 // If photo is empty, in which case, don't show loading error icons
 @property (nonatomic) BOOL emptyImage;
 
-// Video
-@property (nonatomic) BOOL isVideo;
-- (void)getVideoURL:(void (^)(NSURL *url))completion;
-
 // Return a caption string to be displayed over the image
 // Return nil to display no caption
 - (NSString *)caption;
