@@ -76,8 +76,11 @@
     _recycledPages = [[NSMutableSet alloc] init];
     _photos = [[NSMutableArray alloc] init];
     _thumbPhotos = [[NSMutableArray alloc] init];
-    _currentGridContentOffset = CGPointMake(0, CGFLOAT_MAX);
     _didSavePreviousStateOfNavBar = NO;
+    if (@available(iOS 11.0, *)) {
+    } else {
+        _currentGridContentOffset = CGPointMake(0, CGFLOAT_MAX);
+    }
     self.automaticallyAdjustsScrollViewInsets = NO;
     
     // Listen for MWPhoto notifications
@@ -1146,7 +1149,10 @@
     
     // Init grid controller
     _gridController = [[MWGridViewController alloc] init];
-    _gridController.initialContentOffset = _currentGridContentOffset;
+    if (@available(iOS 11.0, *)) {
+    } else {
+        _gridController.initialContentOffset = _currentGridContentOffset;
+    }
     _gridController.browser = self;
     _gridController.selectionMode = _displaySelectionButtons;
     _gridController.view.frame = self.view.bounds;
@@ -1192,8 +1198,12 @@
     
     if (!_gridController) return;
     
-    // Remember previous content offset
-    _currentGridContentOffset = _gridController.collectionView.contentOffset;
+    if (@available(iOS 11.0, *)) {
+    } else {
+        // Remember previous content offset
+        _currentGridContentOffset = _gridController.collectionView.contentOffset;
+    }
+
     
     BOOL showRightBarButtonItem = NO;
     
