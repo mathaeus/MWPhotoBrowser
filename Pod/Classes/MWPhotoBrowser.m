@@ -76,8 +76,11 @@
     _recycledPages = [[NSMutableSet alloc] init];
     _photos = [[NSMutableArray alloc] init];
     _thumbPhotos = [[NSMutableArray alloc] init];
-    _currentGridContentOffset = CGPointMake(0, CGFLOAT_MAX);
     _didSavePreviousStateOfNavBar = NO;
+    if (@available(iOS 11.0, *)) {
+    } else {
+        _currentGridContentOffset = CGPointMake(0, CGFLOAT_MAX);
+    }
     self.automaticallyAdjustsScrollViewInsets = NO;
     
     // Listen for MWPhoto notifications
@@ -372,6 +375,9 @@
     }
     
     // Layout
+    if (@available(iOS 11.0, *)) {
+        [self layoutVisiblePages];
+    }
     [self.view setNeedsLayout];
 
 }
@@ -474,7 +480,11 @@
 
 - (void)viewWillLayoutSubviews {
     [super viewWillLayoutSubviews];
-    [self layoutVisiblePages];
+    if (@available(iOS 11.0, *)) {
+        // do nothing
+    } else {
+        [self layoutVisiblePages];
+    }
 }
 
 - (void)layoutVisiblePages {
@@ -971,7 +981,13 @@
     CGFloat height = 44;
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone &&
         UIInterfaceOrientationIsLandscape(orientation)) height = 32;
-	return CGRectIntegral(CGRectMake(0, self.view.bounds.size.height - height, self.view.bounds.size.width, height));
+    CGFloat adjust = 0;
+    if (@available(iOS 11.0, *)) {
+        //Account for possible notch
+        UIEdgeInsets safeArea = [[UIApplication sharedApplication] keyWindow].safeAreaInsets;
+        adjust = safeArea.bottom;
+    }
+    return CGRectIntegral(CGRectMake(0, self.view.bounds.size.height - height - adjust, self.view.bounds.size.width, height));
 }
 
 - (CGRect)frameForCaptionView:(MWCaptionView *)captionView atIndex:(NSUInteger)index {
@@ -1133,7 +1149,10 @@
     
     // Init grid controller
     _gridController = [[MWGridViewController alloc] init];
-    _gridController.initialContentOffset = _currentGridContentOffset;
+    if (@available(iOS 11.0, *)) {
+    } else {
+        _gridController.initialContentOffset = _currentGridContentOffset;
+    }
     _gridController.browser = self;
     _gridController.selectionMode = _displaySelectionButtons;
     _gridController.view.frame = self.view.bounds;
@@ -1179,8 +1198,12 @@
     
     if (!_gridController) return;
     
-    // Remember previous content offset
-    _currentGridContentOffset = _gridController.collectionView.contentOffset;
+    if (@available(iOS 11.0, *)) {
+    } else {
+        // Remember previous content offset
+        _currentGridContentOffset = _gridController.collectionView.contentOffset;
+    }
+
     
     BOOL showRightBarButtonItem = NO;
     
